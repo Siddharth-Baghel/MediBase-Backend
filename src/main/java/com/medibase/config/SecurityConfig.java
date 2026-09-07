@@ -114,7 +114,8 @@ public class SecurityConfig {
         // Development frontend
         configuration.setAllowedOrigins(
                 List.of(
-                        "http://localhost:5173"
+                        "http://localhost:5173",
+                        "https://medibaseofficial.vercel.app"
                 )
         );
 
