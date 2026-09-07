@@ -24,40 +24,54 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
         http
+
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .cors(cors -> {})
 
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
                 )
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // IMPORTANT: Auth ke saare endpoints public
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-
-                        // Setup endpoints public
-                        .requestMatchers("/api/v1/setup/**").permitAll()
-
                         // CORS preflight
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
 
-                        // बाकी protected
+                        // PUBLIC AUTH APIs
+                        .requestMatchers(
+                                "/api/v1/auth/**"
+                        ).permitAll()
+
+                        // PUBLIC SETUP APIs
+                        .requestMatchers(
+                                "/api/v1/setup/**"
+                        ).permitAll()
+
+                        // बाकी APIs require JWT
                         .anyRequest().authenticated()
                 )
 
@@ -69,17 +83,23 @@ public class SecurityConfig {
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration configuration =
+                new CorsConfiguration();
+
+        /*
+         * DEVELOPMENT + DEPLOYED FRONTEND
+         *
+         * फिलहाल localhost और सभी origins allow कर रहे हैं
+         */
 
         configuration.setAllowedOriginPatterns(
-                List.of(
-                        "http://localhost:*",
-                        "https://*.vercel.app"
-                )
+                List.of("*")
         );
+
 
         configuration.setAllowedMethods(
                 List.of(
@@ -92,18 +112,29 @@ public class SecurityConfig {
                 )
         );
 
-        configuration.setAllowedHeaders(List.of("*"));
 
-        configuration.setExposedHeaders(
-                List.of("Authorization")
+        configuration.setAllowedHeaders(
+                List.of("*")
         );
 
+
+        configuration.setExposedHeaders(
+                List.of(
+                        "Authorization"
+                )
+        );
+
+
         configuration.setAllowCredentials(false);
+
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
 
         return source;
     }
