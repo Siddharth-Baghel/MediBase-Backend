@@ -43,38 +43,59 @@ public class SecurityConfig {
 
         http
 
+                // Disable CSRF for REST API
                 .csrf(AbstractHttpConfigurer::disable)
 
+                // Enable CORS
                 .cors(cors -> {})
 
+                // Disable default login mechanisms
+                .httpBasic(AbstractHttpConfigurer::disable)
+
+                .formLogin(AbstractHttpConfigurer::disable)
+
+                // Stateless JWT session
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
+                // Authorization
                 .authorizeHttpRequests(auth -> auth
 
-                        // CORS preflight
+                        // Allow all CORS preflight requests
                         .requestMatchers(
                                 HttpMethod.OPTIONS,
                                 "/**"
                         ).permitAll()
 
-                        // PUBLIC AUTH APIs
+                        // Explicit public endpoints
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/auth/register-pharmacy"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/auth/login"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/auth/register"
+                        ).permitAll()
+
+                        // Auth endpoints
                         .requestMatchers(
                                 "/api/v1/auth/**"
                         ).permitAll()
 
-                        // PUBLIC SETUP APIs
-                        .requestMatchers(
-                                "/api/v1/setup/**"
-                        ).permitAll()
-
-                        // बाकी APIs require JWT
+                        // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
 
+                // JWT Filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -90,17 +111,14 @@ public class SecurityConfig {
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
-        /*
-         * DEVELOPMENT + DEPLOYED FRONTEND
-         *
-         * फिलहाल localhost और सभी origins allow कर रहे हैं
-         */
-
-        configuration.setAllowedOriginPatterns(
-                List.of("*")
+        // Development frontend
+        configuration.setAllowedOrigins(
+                List.of(
+                        "http://localhost:5173"
+                )
         );
 
-
+        // Methods
         configuration.setAllowedMethods(
                 List.of(
                         "GET",
@@ -112,18 +130,14 @@ public class SecurityConfig {
                 )
         );
 
-
+        // Headers
         configuration.setAllowedHeaders(
                 List.of("*")
         );
 
-
         configuration.setExposedHeaders(
-                List.of(
-                        "Authorization"
-                )
+                List.of("Authorization")
         );
-
 
         configuration.setAllowCredentials(false);
 
