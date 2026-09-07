@@ -1,4 +1,4 @@
-package com.medibase.dto;
+package com.medibase.dto.request;
 
 public class LoginRequest {
 
