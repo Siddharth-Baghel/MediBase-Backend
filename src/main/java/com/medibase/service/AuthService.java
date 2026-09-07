@@ -1,6 +1,6 @@
 package com.medibase.service;
 
-import com.medibase.dto.LoginRequest;
+import com.medibase.dto.request.LoginRequest;
 import com.medibase.dto.request.PharmacyRegistrationRequest;
 import com.medibase.dto.request.RegisterRequest;
 import com.medibase.dto.response.AuthResponse;
