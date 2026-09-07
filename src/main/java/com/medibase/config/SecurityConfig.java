@@ -43,32 +43,21 @@ public class SecurityConfig {
                 .cors(cors -> {})
 
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public Authentication APIs
-                        .requestMatchers(
-                                "/auth/**",
-                                "/api/v1/auth/**"
-                        ).permitAll()
+                        // IMPORTANT: Auth ke saare endpoints public
+                        .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // Public Setup APIs
-                        .requestMatchers(
-                                "/setup/**",
-                                "/api/v1/setup/**"
-                        ).permitAll()
+                        // Setup endpoints public
+                        .requestMatchers("/api/v1/setup/**").permitAll()
 
-                        // Allow CORS preflight requests
-                        .requestMatchers(
-                                HttpMethod.OPTIONS,
-                                "/**"
-                        ).permitAll()
+                        // CORS preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // All other APIs require JWT
+                        // बाकी protected
                         .anyRequest().authenticated()
                 )
 
@@ -88,8 +77,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(
                 List.of(
                         "http://localhost:*",
-                        "https://*.vercel.app",
-                        "https://*.netlify.app"
+                        "https://*.vercel.app"
                 )
         );
 
@@ -104,9 +92,7 @@ public class SecurityConfig {
                 )
         );
 
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
+        configuration.setAllowedHeaders(List.of("*"));
 
         configuration.setExposedHeaders(
                 List.of("Authorization")
@@ -117,10 +103,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }
