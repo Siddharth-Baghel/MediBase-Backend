@@ -3,6 +3,7 @@ package com.medibase.config;
 import com.medibase.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -27,58 +28,50 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-
-    // Password Encryption
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
-    // Spring Security Configuration
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
         http
-
-                // REST API ke liye CSRF disable
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // CORS enable
                 .cors(cors -> {})
 
-                // JWT ke liye stateless session
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // Auth APIs ko authentication nahi chahiye
+                        // Public Authentication APIs
                         .requestMatchers(
+                                "/auth/**",
                                 "/api/v1/auth/**"
                         ).permitAll()
 
-                        // Setup APIs ko bhi public access
+                        // Public Setup APIs
                         .requestMatchers(
+                                "/setup/**",
                                 "/api/v1/setup/**"
                         ).permitAll()
 
-                        // OPTIONS request CORS ke liye allow
+                        // Allow CORS preflight requests
                         .requestMatchers(
-                                org.springframework.http.HttpMethod.OPTIONS,
+                                HttpMethod.OPTIONS,
                                 "/**"
                         ).permitAll()
 
-                        // बाकी APIs JWT मांगेंगी
+                        // All other APIs require JWT
                         .anyRequest().authenticated()
                 )
 
-                // JWT Filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -87,21 +80,19 @@ public class SecurityConfig {
         return http.build();
     }
 
-
-    // CORS Configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Frontend URL
-        configuration.setAllowedOrigins(
+        configuration.setAllowedOriginPatterns(
                 List.of(
-                        "http://localhost:5173"
+                        "http://localhost:*",
+                        "https://*.vercel.app",
+                        "https://*.netlify.app"
                 )
         );
 
-        // Allowed HTTP Methods
         configuration.setAllowedMethods(
                 List.of(
                         "GET",
@@ -113,19 +104,15 @@ public class SecurityConfig {
                 )
         );
 
-        // सभी headers allow
         configuration.setAllowedHeaders(
                 List.of("*")
         );
 
-        // Authorization header frontend ko expose/use karne ke लिए
         configuration.setExposedHeaders(
                 List.of("Authorization")
         );
 
-        // JWT Bearer token normally credentials=true ke bina bhi kaam karta hai
         configuration.setAllowCredentials(false);
-
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
