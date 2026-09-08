@@ -24,78 +24,56 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter
-    ) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
         http
-
-                // Disable CSRF for REST API
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // Enable CORS
                 .cors(cors -> {})
 
-                // Disable default login mechanisms
                 .httpBasic(AbstractHttpConfigurer::disable)
 
                 .formLogin(AbstractHttpConfigurer::disable)
 
-                // Stateless JWT session
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-                // Authorization
                 .authorizeHttpRequests(auth -> auth
 
-                        // Allow all CORS preflight requests
+                        // Allow CORS preflight
                         .requestMatchers(
                                 HttpMethod.OPTIONS,
                                 "/**"
                         ).permitAll()
 
-                        // Explicit public endpoints
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/v1/auth/register-pharmacy"
-                        ).permitAll()
-
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/v1/auth/login"
-                        ).permitAll()
-
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/v1/auth/register"
-                        ).permitAll()
-
-                        // Auth endpoints
+                        // Public auth endpoints
                         .requestMatchers(
                                 "/api/v1/auth/**"
+                        ).permitAll()
+
+                        // TEMPORARY: Integration endpoint public for testing
+                        .requestMatchers(
+                                "/api/v1/integration/**"
                         ).permitAll()
 
                         // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
 
-                // JWT Filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -104,14 +82,12 @@ public class SecurityConfig {
         return http.build();
     }
 
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
-        // Development frontend
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
@@ -119,7 +95,6 @@ public class SecurityConfig {
                 )
         );
 
-        // Methods
         configuration.setAllowedMethods(
                 List.of(
                         "GET",
@@ -131,17 +106,13 @@ public class SecurityConfig {
                 )
         );
 
-        // Headers
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
+        configuration.setAllowedHeaders(List.of("*"));
 
         configuration.setExposedHeaders(
                 List.of("Authorization")
         );
 
         configuration.setAllowCredentials(false);
-
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

@@ -20,4 +20,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     List<Inventory> findByTotalQuantityLessThanEqual(
             Integer quantity
     );
+
+    List<Inventory> findByMedicine_NameContainingIgnoreCase(
+            String query
+    );
 }
