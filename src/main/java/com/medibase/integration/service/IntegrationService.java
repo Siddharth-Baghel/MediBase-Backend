@@ -13,7 +13,6 @@ public class IntegrationService {
 
     private final InventoryRepository inventoryRepository;
 
-
     public IntegrationService(
             InventoryRepository inventoryRepository
     ) {
@@ -32,16 +31,17 @@ public class IntegrationService {
 
         return inventories.stream()
 
-                // केवल जिनके पास stock available है
-                .filter(inventory ->
-                        inventory.getTotalQuantity() != null
-                                && inventory.getTotalQuantity() > 0
-                )
+                // कोई stock filter नहीं
+                // Inventory में medicine मौजूद है तो result में दिखेगी
 
                 .map(inventory -> {
 
                     var medicine = inventory.getMedicine();
                     var pharmacy = inventory.getPharmacy();
+
+                    Integer quantity = inventory.getTotalQuantity() != null
+                            ? inventory.getTotalQuantity()
+                            : 0;
 
                     return new IntegrationMedicineResponse(
 
@@ -61,7 +61,7 @@ public class IntegrationService {
                             pharmacy.getLatitude(),
                             pharmacy.getLongitude(),
 
-                            inventory.getTotalQuantity()
+                            quantity
                     );
                 })
 
